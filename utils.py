@@ -1,4 +1,4 @@
- import gradio as gr
+import gradio as gr
 import pandas as pd
 import json
 from wordcloud import WordCloud
@@ -80,8 +80,6 @@ def soft_voting_ensemble(text, models, tokenizer):
     
     # Stack and average probabilities
     avg_probs = torch.mean(torch.stack(all_probs), dim=0)
-    
-    # Get final predicted label
     final_label = torch.argmax(avg_probs, dim=-1).item()
 
     return {"avg_probs": avg_probs.tolist()[0], "predicted_label": final_label}

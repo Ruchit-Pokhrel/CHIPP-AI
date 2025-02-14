@@ -84,3 +84,4 @@ def soft_voting_ensemble(text, models, tokenizer):
 
     return {"avg_probs": avg_probs.tolist()[0], "predicted_label": final_label}
 
+ print("how did chippy become so dumb")   

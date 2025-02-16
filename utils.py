@@ -78,3 +78,39 @@ def predict_sentiment(text):
 
     return sentiment, confidence
 
+def predict_sentiment_csv(file_obj, column_name):
+    """
+    Expects a CSV file and a column name. If the user provides a column name that exists in the CSV,
+    that column is used for text. Otherwise, the first column is used.
+    Each non-empty row is passed through predict_sentiment(), and a count of each
+    predicted sentiment is returned.
+    """
+    try:
+        # gr.File with type="file" returns a file path.
+        df = pd.read_csv(file_obj)
+    except Exception as e:
+        return {"error": f"Error reading CSV file: {e}"}
+
+    if len(df) > 100:
+      df = df.head(100)
+    # Use the provided column name if it exists; otherwise, default to the first column.
+    if column_name and column_name in df.columns:
+        text_col = column_name
+    else:
+        text_col = df.columns[0]
+
+    counts = {"Negative": 0, "Neutral": 0, "Positive": 0}
+    
+    # Iterate over the rows in the chosen column
+    for text in df[text_col]:
+        if not isinstance(text, str):
+            text = str(text)
+        if not text.strip():
+            continue  # Skip empty strings
+        
+        sentiment, _ = predict_sentiment(text)
+        if sentiment == "Please enter some text":
+            continue
+        counts[sentiment] += 1
+
+    return counts

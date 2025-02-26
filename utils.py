@@ -5,11 +5,15 @@ import gradio as gr
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import numpy as np
+
 import matplotlib.pyplot as plt
 from openai import OpenAI
 from dotenv import load_dotenv
 from io import StringIO
 from wordcloud import WordCloud
+
+
+
 
 # Load environment variables and initialize Deepseek client
 load_dotenv(dotenv_path='/content/drive/MyDrive/.env')
@@ -47,6 +51,8 @@ class SentimentEnsemble:
 
     def predict(self, text):
         predictions = []
+
+
         with torch.no_grad():
             for model, tokenizer in zip(self.models, self.tokenizers):
                 inputs = tokenizer(
@@ -63,6 +69,8 @@ class SentimentEnsemble:
         final_pred = np.argmax(ensemble_pred)
         label_mapping = {0: "Negative", 1: "Neutral", 2: "Positive"}
         sentiment = label_mapping[final_pred]
+
+
         confidence_scores = {
             "Negative": float(ensemble_pred[0][0]),
             "Neutral": float(ensemble_pred[0][1]),
@@ -76,6 +84,7 @@ model = SentimentEnsemble()
 def predict_sentiment(text):
     if not text.strip():
         return "Please enter some text", None
+
     sentiment, confidence = model.predict(text)
     confidence_numeric = {k: v * 100 for k, v in confidence.items()}
     labels = list(confidence_numeric.keys())
@@ -88,6 +97,7 @@ def predict_sentiment(text):
     total = sum(sizes)
     legend_labels = [f"{label}: {(size/total)*100:.1f}%" for label, size in zip(labels, sizes)]
     ax.legend(wedges, legend_labels, title="Categories", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
+
     return sentiment, fig
 
 def predict_sentiment_csv(file_obj, column_name):
@@ -95,20 +105,26 @@ def predict_sentiment_csv(file_obj, column_name):
         df = pd.read_csv(file_obj)
     except Exception as e:
         return {"error": f"Error reading CSV file: {e}"}
+
     # Process only the first 10 rows (adjustable)
     if len(df) > 100:
         df = df.head(100)
     text_col = column_name if column_name and column_name in df.columns else df.columns[0]
     counts = {"Negative": 0, "Neutral": 0, "Positive": 0}
+
+
     for text in df[text_col]:
         if not isinstance(text, str):
             text = str(text)
         if not text.strip():
             continue
+
+
         sentiment, _ = predict_sentiment(text)
         if sentiment == "Please enter some text":
             continue
         counts[sentiment] += 1
+
     labels = list(counts.keys())
     sizes = list(counts.values())
     fig, ax = plt.subplots()
@@ -310,3 +326,4 @@ tabbed_interface = gr.TabbedInterface(
 )
 
 tabbed_interface.launch()
+
